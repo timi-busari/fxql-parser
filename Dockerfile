@@ -45,5 +45,6 @@ ENV NODE_ENV=production
 # Expose the port (Render will set the PORT environment variable)
 EXPOSE 10000
 
-# Command to run the application
-CMD ["node", "dist/main"]
+# Command to run the application and run migration
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+
