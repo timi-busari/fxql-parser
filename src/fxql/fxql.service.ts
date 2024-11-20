@@ -115,6 +115,7 @@ export class FxqlService {
       });
     } catch (dbError) {
       this.logger.error(`Database error saving rate: ${dbError.message}`);
+      new CustomException('Error saving rate')
     }
   }
 
