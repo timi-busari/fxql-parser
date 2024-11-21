@@ -1,73 +1,126 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# FXQL (Foreign Exchange Query Language) Parser
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
+This project is a NestJS-based API for parsing and managing FXQL statements related to currency exchange rates.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Local Development Requirements
+- Node.js (v18 or later recommended)
+- npm (v9 or later)
+- PostgreSQL (v13 or later)
+- Docker (optional, for containerized development)
 
-## Description
+## Setup Instructions
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
+### 1. Clone the Repository
 ```bash
-$ npm install
+git clone https://github.com/timi-busari/fxql-parser.git
+cd fxql-parser
 ```
 
-## Running the app
-
+### 2. Install Dependencies
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Test
+### 3. Set Up Environment Variables
+Create a `.env` file in the project root with the following variables:
+```
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=54321
+DB_USERNAME=devusername
+DB_PASSWORD=your-db-password
+DB_NAME=foreign_exchange_db
 
-```bash
-# unit tests
-$ npm run test
+# Application Configuration
+PORT=3000
+API_KEY=your-secret-key
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=10
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Prisma Database URL
+DATABASE_URL="postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public"
 ```
 
-## Support
+### 4. Initialize Database
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 5. Run the Application
+```bash
+# Development mode
+npm run start:dev
 
-## Stay in touch
+# Production mode
+npm run start:prod
+```
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## API Documentation
+API documentation is generated using Swagger and can be accessed at:
+`http://localhost:3000/api-docs`
+
+### API Endpoint
+- **POST** `/fxql-statements`
+  - Parses and saves FXQL statements
+  - Requires `fxql-api-key` header for authentication
+
+### FXQL Statement Format
+Example: `USD-EUR { BUY 1.05 SELL 1.10 CAP 1000 }`
+- Source Currency: USD
+- Destination Currency: EUR
+- Buy Price: 1.05
+- Sell Price: 1.10
+- Cap Amount: 1000
+
+## Design Decisions and Assumptions
+
+### Authentication
+- API uses a simple API key authentication mechanism
+- API key is validated through a custom guard (`ApiKeyGuard`)
+
+### Rate Limiting
+- Implemented using `express-rate-limit`
+- Configurable window and max request limits
+- Default: 10 requests per 15 minutes
+
+### Validation
+- Uses `class-validator` for input validation
+- Whitelist strategy prevents unknown properties
+- Custom exception factory for validation errors
+
+### Database
+- Uses Prisma ORM for database interactions
+- Supports PostgreSQL
+- Migrations managed through Prisma CLI
+
+## Security Considerations
+- Helmet middleware for adding HTTP headers
+- Input validation and sanitization
+- Rate limiting to prevent abuse
+
+## Testing
+```bash
+# Run unit tests
+npm run test
+
+# Run test coverage
+npm run test:cov
+
+```
+
+## Deployment
+- Configured for easy deployment with npm scripts
+- Includes database migration step in production start script
+
+## Troubleshooting
+- Ensure all environment variables are correctly set
+- Check database connection parameters
+- Verify API key configuration
 
 ## License
+UNLICENSED - Private Project
 
-Nest is [MIT licensed](LICENSE).
+## Contact
+Timi Busari
